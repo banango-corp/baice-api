@@ -1,0 +1,26 @@
+<html>
+
+<body>
+  <input type="file" id="audioFileInput" accept="audio/*">
+  <button id="uploadButton">Upload</button>
+  <script>
+    const uploadButton = document.getElementById("uploadButton")
+    uploadButton.onclick = async () => {
+      window.audioFileInput = document.getElementById("audioFileInput")
+      const file = window.audioFileInput.files[0]
+      console.log('>>> file', file)
+      const headers = new Headers()
+      headers.append('Content-Type', file.type)
+      const response = await fetch('http://localhost:9000/post', {
+        method: 'POST',
+        mode: 'cors',
+        cache: 'no-cache',
+        body: file,
+        headers,
+      })
+      console.log('>>> response', await response.json())
+    }
+  </script>
+</body>
+
+</html>

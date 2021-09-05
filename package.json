@@ -1,0 +1,26 @@
+{
+  "name": "baice-api",
+  "version": "0.1.0",
+  "main": "src/index.js",
+  "engines": {
+    "node": ">=v14.0.0"
+  },
+  "dependencies": {
+    "@azure/storage-blob": "^12.7.0",
+    "dotenv": "^10.0.0",
+    "fastify": "^3.20.2",
+    "fastify-cors": "^6.0.2",
+    "file-type": "^16.5.3",
+    "joi": "^17.4.2",
+    "pino": "^6.13.1",
+    "serialize-error": "^8.1.0",
+    "uuid": "^8.3.2",
+    "verror": "^1.10.0"
+  },
+  "devDependencies": {
+    "eslint": "^7.32.0"
+  },
+  "scripts": {
+    "start": "node src/index.js"
+  }
+}
