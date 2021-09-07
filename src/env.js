@@ -5,7 +5,8 @@ const envSchema = Joi.object({
   ACCOUNT_NAME: Joi.string().required(),
   ACCOUNT_KEY: Joi.string().required(),
   CONTAINER_NAME: Joi.string().required(),
-  HTTP_SERVER_PORT: Joi.number().required()
+  HTTP_SERVER_PORT: Joi.number().required(),
+  MONGODB_CONN_STRING: Joi.string().required()
 })
 
 function parseEnv(processEnv) {

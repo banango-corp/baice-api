@@ -1,14 +1,15 @@
-const audioService = require('./audio')
-
-async function createPost({
+async function createPost(models, {
   username,
   audioName,
   audioDuration
 }) {
-  return {
-    id: 'TO_BE_SET',
-    createdAt: new Date()
-  }
+  const post = new models.Post({
+    username,
+    audioName,
+    audioDuration
+  })
+  await post.save()
+  return post.toJSON()
 }
 
 module.exports = {

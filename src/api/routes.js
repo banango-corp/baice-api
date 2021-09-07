@@ -1,7 +1,7 @@
 const { uploadAudio } = require('../services/audio')
 const { createPost } = require('../services/post')
 
-const postPost = (env, logger) => async (request, reply) => {
+const postPost = ({ env, logger, models }) => async (request, reply) => {
   const { audioName, audioDuration, temporaryURL } = await uploadAudio(
     request.body,
     env.ACCOUNT_NAME,
@@ -9,7 +9,7 @@ const postPost = (env, logger) => async (request, reply) => {
     env.CONTAINER_NAME
   )
 
-  const { id, createdAt } = await createPost({
+  const { _id: id, createdAt } = await createPost(models, {
     username: 'TO_BE_SET',
     audioName,
     audioDuration

@@ -8,6 +8,9 @@ async function uploadAudio(audioBuffer, accountName, accountKey, containerName) 
   try {
     const { mime: mimeType, ext: fileExtension } = await fileType.fromBuffer(audioBuffer)
     const { format: { duration: audioDuration } } = await mm.parseBuffer(audioBuffer, { mimeType })
+    if (audioDuration > 30) {
+      throw new VError({ name: 'ExceededMaximumDuration' }, 'Audio buffer exceeded the maximum duration of 30 seconds')
+    }
 
     const sharedKeyCredential = new StorageSharedKeyCredential(accountName, accountKey)
     const blobServiceClient = new BlobServiceClient(`https://${accountName}.blob.core.windows.net`, sharedKeyCredential)
