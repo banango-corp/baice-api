@@ -3,7 +3,7 @@ const fastifyCors = require('fastify-cors')
 
 const { createModels } = require('../models')
 
-const { postPost } = require('./routes')
+const { postPost, getFeed, getPostAudio } = require('./routes')
 
 const { streamToBuffer } = require('./utils')
 
@@ -20,6 +20,8 @@ function setupRoutes(server, { env, logger, models }) {
 
   server.get('/', () => ({ baiceApi: true }))
   server.post('/post', postPost({ env, logger, models }))
+  server.get('/feed', getFeed({ env, logger, models }))
+  server.get('/post/audio/:audioName', getPostAudio({ env, logger, models }))
 }
 
 async function start({ env, logger, db }) {

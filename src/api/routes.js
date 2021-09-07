@@ -1,13 +1,17 @@
-const { uploadAudio } = require('../services/audio')
-const { createPost } = require('../services/post')
+const { URLSearchParams } = require('url')
+
+const { uploadAudio, buildStorageAudioURL } = require('../services/audio')
+const { createPost, getFeedForUser, increasePlayCount, buildPostAudioURL } = require('../services/post')
 
 const postPost = ({ env, logger, models }) => async (request, reply) => {
-  const { audioName, audioDuration, temporaryURL } = await uploadAudio(
-    request.body,
-    env.ACCOUNT_NAME,
-    env.ACCOUNT_KEY,
-    env.CONTAINER_NAME
-  )
+  const { audioName, audioDuration, temporaryAccessQueryParams } = await uploadAudio({
+    audioBuffer: request.body,
+    accountName: env.ACCOUNT_NAME,
+    accountKey: env.ACCOUNT_KEY,
+    containerName: env.CONTAINER_NAME
+  })
+
+  const audioURL = buildPostAudioURL(env.AUDIO_URL_PREFIX, audioName, temporaryAccessQueryParams)
 
   const { _id: id, createdAt } = await createPost(models, {
     username: 'TO_BE_SET',
@@ -20,7 +24,7 @@ const postPost = ({ env, logger, models }) => async (request, reply) => {
     .send({
       id,
       username: 'TO_BE_SET',
-      audioURL: temporaryURL,
+      audioURL,
       audioDuration,
       likesCount: 0,
       dislikesCount: 0,
@@ -29,6 +33,40 @@ const postPost = ({ env, logger, models }) => async (request, reply) => {
     })
 }
 
+const getFeed = ({ env, logger, models }) => async (request, reply) => {
+  const posts = await getFeedForUser({
+    models,
+    username: 'TO_BE_SET',
+    accountName: env.ACCOUNT_NAME,
+    accountKey: env.ACCOUNT_KEY,
+    containerName: env.CONTAINER_NAME,
+    audioURLPrefix: env.AUDIO_URL_PREFIX
+  })
+
+  reply
+    .code(200)
+    .send(posts)
+}
+
+const getPostAudio = ({ env, logger, models }) => async (request, reply) => {
+  const encodedQueryParams = (new URLSearchParams(Object.entries(request.query))).toString()
+  const audioName = request.params.audioName
+
+  const url = buildStorageAudioURL({
+    audioName,
+    temporaryAccessQueryParams: encodedQueryParams,
+    accountName: env.ACCOUNT_NAME,
+    accountKey: env.ACCOUNT_KEY,
+    containerName: env.CONTAINER_NAME
+  })
+
+  reply.redirect(url)
+
+  await increasePlayCount(models, audioName)
+}
+
 module.exports = {
-  postPost
+  postPost,
+  getFeed,
+  getPostAudio
 }

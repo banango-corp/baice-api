@@ -4,7 +4,44 @@ const fileType = require('file-type')
 const mm = require('music-metadata')
 const { BlobServiceClient, StorageSharedKeyCredential, generateBlobSASQueryParameters, BlobSASPermissions } = require('@azure/storage-blob')
 
-async function uploadAudio(audioBuffer, accountName, accountKey, containerName) {
+function buildTemporaryAccessQueryParams({
+  audioName,
+  accountName,
+  accountKey,
+  containerName
+}) {
+  const sharedKeyCredential = new StorageSharedKeyCredential(accountName, accountKey)
+  return generateBlobSASQueryParameters({
+    containerName,
+    blobName: audioName,
+    permissions: BlobSASPermissions.parse('r'),
+    startsOn: new Date(),
+    expiresOn: new Date(new Date().valueOf() + 60000 * 60 * 24) // Expires in 24 hours
+  }, sharedKeyCredential).toString()
+}
+
+const blobServiceUrl = (accountName) => `https://${accountName}.blob.core.windows.net`
+
+function buildStorageAudioURL({
+  audioName,
+  temporaryAccessQueryParams,
+  accountName,
+  accountKey,
+  containerName
+}) {
+  const sharedKeyCredential = new StorageSharedKeyCredential(accountName, accountKey)
+  const blobServiceClient = new BlobServiceClient(blobServiceUrl(accountName), sharedKeyCredential)
+  const containerClient = blobServiceClient.getContainerClient(containerName)
+  const blockBlobClient = containerClient.getBlockBlobClient(audioName)
+  return `${blockBlobClient.url}?${temporaryAccessQueryParams}`
+}
+
+async function uploadAudio({
+  audioBuffer,
+  accountName,
+  accountKey,
+  containerName
+}) {
   try {
     const { mime: mimeType, ext: fileExtension } = await fileType.fromBuffer(audioBuffer)
     const { format: { duration: audioDuration } } = await mm.parseBuffer(audioBuffer, { mimeType })
@@ -13,7 +50,7 @@ async function uploadAudio(audioBuffer, accountName, accountKey, containerName) 
     }
 
     const sharedKeyCredential = new StorageSharedKeyCredential(accountName, accountKey)
-    const blobServiceClient = new BlobServiceClient(`https://${accountName}.blob.core.windows.net`, sharedKeyCredential)
+    const blobServiceClient = new BlobServiceClient(blobServiceUrl(accountName), sharedKeyCredential)
     const containerClient = blobServiceClient.getContainerClient(containerName)
     const blobName = `${uuid()}.${fileExtension}`
     const blockBlobClient = containerClient.getBlockBlobClient(blobName)
@@ -24,23 +61,20 @@ async function uploadAudio(audioBuffer, accountName, accountKey, containerName) 
       }
     })
 
-    const blobURL = blockBlobClient.url
-    const temporaryAccessQueryParams = generateBlobSASQueryParameters({
-      containerName,
-      blobName,
-      permissions: BlobSASPermissions.parse('r'),
-      startsOn: new Date(),
-      expiresOn: new Date(new Date().valueOf() + 60000 * 60 * 24) // Expires in 24 hours
-    }, sharedKeyCredential).toString()
+    const temporaryAccessQueryParams = buildTemporaryAccessQueryParams(blobName, containerName, accountName, accountKey)
 
-    const temporaryURL = `${blobURL}?${temporaryAccessQueryParams}`
-
-    return { audioName: blobName, audioDuration, temporaryURL }
+    return {
+      audioName: blobName,
+      audioDuration,
+      temporaryAccessQueryParams
+    }
   } catch (error) {
     throw new VError(error, 'Failed to store the audio buffer')
   }
 }
 
 module.exports = {
-  uploadAudio
+  uploadAudio,
+  buildTemporaryAccessQueryParams,
+  buildStorageAudioURL
 }

@@ -6,6 +6,7 @@ const envSchema = Joi.object({
   ACCOUNT_KEY: Joi.string().required(),
   CONTAINER_NAME: Joi.string().required(),
   HTTP_SERVER_PORT: Joi.number().required(),
+  AUDIO_URL_PREFIX: Joi.string().required(),
   MONGODB_CONN_STRING: Joi.string().required()
 })
 
