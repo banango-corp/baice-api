@@ -43,6 +43,7 @@ async function uploadAudio({
   containerName
 }) {
   try {
+    console.log('>>>>>>>>>>>>>> audioBuffer', audioBuffer)
     const { mime: mimeType, ext: fileExtension } = await fileType.fromBuffer(audioBuffer)
     const { format: { duration: audioDuration } } = await mm.parseBuffer(audioBuffer, { mimeType })
     if (audioDuration > 30) {
@@ -52,8 +53,8 @@ async function uploadAudio({
     const sharedKeyCredential = new StorageSharedKeyCredential(accountName, accountKey)
     const blobServiceClient = new BlobServiceClient(blobServiceUrl(accountName), sharedKeyCredential)
     const containerClient = blobServiceClient.getContainerClient(containerName)
-    const blobName = `${uuid()}.${fileExtension}`
-    const blockBlobClient = containerClient.getBlockBlobClient(blobName)
+    const audioName = `${uuid()}.${fileExtension}`
+    const blockBlobClient = containerClient.getBlockBlobClient(audioName)
 
     await blockBlobClient.upload(audioBuffer, Buffer.byteLength(audioBuffer), {
       blobHTTPHeaders: {
@@ -61,10 +62,15 @@ async function uploadAudio({
       }
     })
 
-    const temporaryAccessQueryParams = buildTemporaryAccessQueryParams(blobName, containerName, accountName, accountKey)
+    const temporaryAccessQueryParams = buildTemporaryAccessQueryParams({
+      audioName,
+      accountName,
+      accountKey,
+      containerName
+    })
 
     return {
-      audioName: blobName,
+      audioName,
       audioDuration,
       temporaryAccessQueryParams
     }
