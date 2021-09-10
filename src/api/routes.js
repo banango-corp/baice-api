@@ -1,9 +1,16 @@
 const { URLSearchParams } = require('url')
 
 const { uploadAudio, buildStorageAudioURL } = require('../services/audio')
-const { createPost, getFeedForUser, increasePlayCount, buildPostAudioURL } = require('../services/post')
+const {
+  createPost,
+  increasePlayCount,
+  buildPostAudioURL,
+  getFeedForUser,
+  likePost,
+  removePost
+} = require('../services/post')
 
-const postPost = ({ env, logger, models }) => async (request, reply) => {
+const postPost = ({ env, models }) => async (request, reply) => {
   const { audioName, audioDuration, temporaryAccessQueryParams } = await uploadAudio({
     audioBuffer: request.body,
     accountName: env.ACCOUNT_NAME,
@@ -33,7 +40,7 @@ const postPost = ({ env, logger, models }) => async (request, reply) => {
     })
 }
 
-const getFeed = ({ env, logger, models }) => async (request, reply) => {
+const getFeed = ({ env, models }) => async (request, reply) => {
   const posts = await getFeedForUser({
     models,
     username: 'TO_BE_SET',
@@ -48,7 +55,7 @@ const getFeed = ({ env, logger, models }) => async (request, reply) => {
     .send(posts)
 }
 
-const getPostAudio = ({ env, logger, models }) => async (request, reply) => {
+const getPostAudio = ({ env, models }) => async (request, reply) => {
   const encodedQueryParams = (new URLSearchParams(Object.entries(request.query))).toString()
   const audioName = request.params.audioName
 
@@ -65,8 +72,38 @@ const getPostAudio = ({ env, logger, models }) => async (request, reply) => {
   await increasePlayCount(models, audioName)
 }
 
+const putPostLike = ({ env, models, dbConn }) => async (request, reply) => {
+  const { postId } = request.params
+  const post = await likePost({
+    models,
+    dbConn,
+    accountName: env.ACCOUNT_NAME,
+    accountKey: env.ACCOUNT_KEY,
+    containerName: env.CONTAINER_NAME,
+    audioURLPrefix: env.AUDIO_URL_PREFIX,
+    postId,
+    username: 'TO_BE_SET'
+  })
+  reply
+    .code(200)
+    .send(post)
+}
+
+const deletePost = ({ models }) => async (request, reply) => {
+  const { postId } = request.params
+  await removePost({
+    models,
+    postId
+  })
+  reply
+    .code(200)
+    .send()
+}
+
 module.exports = {
   postPost,
   getFeed,
-  getPostAudio
+  getPostAudio,
+  putPostLike,
+  deletePost
 }

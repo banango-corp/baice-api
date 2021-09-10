@@ -43,7 +43,6 @@ async function uploadAudio({
   containerName
 }) {
   try {
-    console.log('>>>>>>>>>>>>>> audioBuffer', audioBuffer)
     const { mime: mimeType, ext: fileExtension } = await fileType.fromBuffer(audioBuffer)
     const { format: { duration: audioDuration } } = await mm.parseBuffer(audioBuffer, { mimeType })
     if (audioDuration > 30) {

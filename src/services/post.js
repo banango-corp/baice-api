@@ -16,7 +16,7 @@ async function createPost(models, {
   return post.toJSON()
 }
 
-async function increasePlayCount(models, audioName) {
+async function increasePlayCount(/* models, audioName */) {
   // TODO
 }
 
@@ -24,7 +24,7 @@ const buildPostAudioURL = (audioURLPrefix, audioName, temporaryAccessQueryParams
 
 async function getFeedForUser({
   models,
-  username,
+  // username,
   accountName,
   accountKey,
   containerName,
@@ -60,9 +60,64 @@ async function getFeedForUser({
   return result
 }
 
+async function likePost({
+  models,
+  dbConn,
+  accountName,
+  accountKey,
+  containerName,
+  audioURLPrefix,
+  username,
+  postId
+}) {
+  const dbSession = await dbConn.startSession()
+  let post
+  await dbSession.withTransaction(async () => {
+    post = await models.Post.findById(postId).exec()
+    const index = post.likes.indexOf(username)
+    if (index === -1) {
+      post.likes.push(username)
+    } else {
+      post.likes.splice(index, 1)
+    }
+    await post.save()
+  })
+  const {
+    _id: id,
+    audioName,
+    audioDuration,
+    likes,
+    playsCount,
+    createdAt
+  } = post
+  const temporaryAccessQueryParams = buildTemporaryAccessQueryParams({
+    audioName,
+    accountName,
+    accountKey,
+    containerName
+  })
+  const audioURL = buildPostAudioURL(audioURLPrefix, post.audioName, temporaryAccessQueryParams)
+  return {
+    id,
+    username,
+    audioURL,
+    audioDuration,
+    likes,
+    likesCount: likes.length,
+    playsCount,
+    createdAt
+  }
+}
+
+async function removePost({ models, postId }) {
+  await models.Post.deleteOne({ _id: postId })
+}
+
 module.exports = {
   createPost,
   increasePlayCount,
+  buildPostAudioURL,
   getFeedForUser,
-  buildPostAudioURL
+  likePost,
+  removePost
 }
