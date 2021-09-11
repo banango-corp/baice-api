@@ -4,14 +4,9 @@ const VError = require('verror')
 const uuid = require('uuid').v4
 const fileType = require('file-type')
 const mm = require('music-metadata')
-const { BlobServiceClient, StorageSharedKeyCredential, generateBlobSASQueryParameters, BlobSASPermissions } = require('@azure/storage-blob')
+const { StorageSharedKeyCredential, generateBlobSASQueryParameters, BlobSASPermissions } = require('@azure/storage-blob')
 
-function buildTemporaryAccessQueryParams({
-  audioName,
-  accountName,
-  accountKey,
-  containerName
-}) {
+const buildTemporaryAccessQueryParams = (accountName, accountKey, containerName) => (audioName) => {
   const sharedKeyCredential = new StorageSharedKeyCredential(accountName, accountKey)
   return generateBlobSASQueryParameters({
     containerName,
@@ -24,13 +19,7 @@ function buildTemporaryAccessQueryParams({
 
 const blobServiceUrl = (accountName) => `https://${accountName}.blob.core.windows.net`
 
-function buildStorageAudioURL({
-  audioName,
-  temporaryAccessQueryParams,
-  accountName,
-  accountKey,
-  containerName
-}) {
+const buildStorageAudioURL = (accountName, accountKey, containerName, BlobServiceClient) => (audioName, temporaryAccessQueryParams) => {
   const sharedKeyCredential = new StorageSharedKeyCredential(accountName, accountKey)
   const blobServiceClient = new BlobServiceClient(blobServiceUrl(accountName), sharedKeyCredential)
   const containerClient = blobServiceClient.getContainerClient(containerName)
@@ -38,12 +27,7 @@ function buildStorageAudioURL({
   return `${blockBlobClient.url}?${temporaryAccessQueryParams}`
 }
 
-async function uploadAudio({
-  audioBuffer,
-  accountName,
-  accountKey,
-  containerName
-}) {
+const uploadAudio = (accountName, accountKey, containerName, BlobServiceClient) => async (audioBuffer) => {
   try {
     const { mime: mimeType, ext: fileExtension } = await fileType.fromBuffer(audioBuffer)
     const { format: { duration: audioDuration } } = await mm.parseBuffer(audioBuffer, { mimeType })
@@ -80,8 +64,8 @@ async function uploadAudio({
   }
 }
 
-module.exports = {
-  uploadAudio,
-  buildTemporaryAccessQueryParams,
-  buildStorageAudioURL
-}
+module.exports = (accountName, accountKey, containerName, BlobServiceClient) => ({
+  uploadAudio: uploadAudio(accountName, accountKey, containerName, BlobServiceClient),
+  buildTemporaryAccessQueryParams: buildTemporaryAccessQueryParams(accountName, accountKey, containerName),
+  buildStorageAudioURL: buildStorageAudioURL(accountName, accountKey, containerName, BlobServiceClient)
+})

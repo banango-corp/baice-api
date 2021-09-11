@@ -1,14 +1,12 @@
 'use strict'
 
-const {
-  buildTemporaryAccessQueryParams
-} = require('./audio')
+const buildPostAudioURL = (audioURLPrefix, audioName, temporaryAccessQueryParams) => `${audioURLPrefix}/post/audio/${audioName}?${temporaryAccessQueryParams}`
 
-async function createPost(models, audioURLPrefix, temporaryAccessQueryParams, {
+const createPost = (models, audioURLPrefix) => async (temporaryAccessQueryParams, {
   username,
   audioName,
   audioDuration
-}) {
+}) => {
   const post = new models.Post({
     username,
     audioName,
@@ -30,21 +28,14 @@ async function createPost(models, audioURLPrefix, temporaryAccessQueryParams, {
   }
 }
 
-async function increasePlayCount(/* models, audioName */) {
-  // TODO
+// eslint-disable-next-line no-unused-vars
+const increasePlayCount = (models) => async (audioName) => {
+  // TODO: Implement
 }
 
-const buildPostAudioURL = (audioURLPrefix, audioName, temporaryAccessQueryParams) => `${audioURLPrefix}/post/audio/${audioName}?${temporaryAccessQueryParams}`
-
-async function getFeedForUser({
-  models,
-  // username,
-  accountName,
-  accountKey,
-  containerName,
-  audioURLPrefix
-}) {
-  // TODO: retrieve only the posts from the users the `username` follows
+// eslint-disable-next-line no-unused-vars
+const getFeedForUser = (models, audioService, audioURLPrefix) => async (username) => {
+  // TODO: retrieve only the posts from the users followed by the provided `username`
   const posts = await models.Post
     .find({})
     .sort({ createdAt: -1 })
@@ -52,12 +43,7 @@ async function getFeedForUser({
     .exec()
 
   const result = posts.map((post) => {
-    const temporaryAccessQueryParams = buildTemporaryAccessQueryParams({
-      audioName: post.audioName,
-      accountName,
-      accountKey,
-      containerName
-    })
+    const temporaryAccessQueryParams = audioService.buildTemporaryAccessQueryParams(post.audioName)
     const audioURL = buildPostAudioURL(audioURLPrefix, post.audioName, temporaryAccessQueryParams)
     return {
       id: post._id,
@@ -74,16 +60,7 @@ async function getFeedForUser({
   return result
 }
 
-async function likePost({
-  models,
-  dbConn,
-  accountName,
-  accountKey,
-  containerName,
-  audioURLPrefix,
-  username,
-  postId
-}) {
+const likePost = (models, dbConn, audioService, audioURLPrefix) => async (username, postId) => {
   const dbSession = await dbConn.startSession()
   let post
   await dbSession.withTransaction(async () => {
@@ -96,42 +73,28 @@ async function likePost({
     }
     await post.save()
   })
-  const {
-    _id: id,
-    audioName,
-    audioDuration,
-    likes,
-    playsCount,
-    createdAt
-  } = post
-  const temporaryAccessQueryParams = buildTemporaryAccessQueryParams({
-    audioName,
-    accountName,
-    accountKey,
-    containerName
-  })
+  const temporaryAccessQueryParams = audioService.buildTemporaryAccessQueryParams(post.audioName)
   const audioURL = buildPostAudioURL(audioURLPrefix, post.audioName, temporaryAccessQueryParams)
   return {
-    id,
+    id: post._id,
     username,
     audioURL,
-    audioDuration,
-    likes,
-    likesCount: likes.length,
-    playsCount,
-    createdAt
+    audioDuration: post.audioDuration,
+    likes: post.likes,
+    likesCount: post.likes.length,
+    playsCount: post.playsCount,
+    createdAt: post.createdAt
   }
 }
 
-async function removePost({ models, postId }) {
+const removePost = (models) => async (postId) => {
   await models.Post.deleteOne({ _id: postId })
 }
 
-module.exports = {
-  createPost,
-  increasePlayCount,
-  buildPostAudioURL,
-  getFeedForUser,
-  likePost,
-  removePost
-}
+module.exports = (models, dbConn, audioService, audioURLPrefix) => ({
+  createPost: createPost(models, audioURLPrefix),
+  increasePlayCount: increasePlayCount(models),
+  getFeedForUser: getFeedForUser(models, audioService, audioURLPrefix),
+  likePost: likePost(models, dbConn, audioService, audioURLPrefix),
+  removePost: removePost(models)
+})
