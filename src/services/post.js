@@ -4,7 +4,7 @@ const {
   buildTemporaryAccessQueryParams
 } = require('./audio')
 
-async function createPost(models, {
+async function createPost(models, audioURLPrefix, temporaryAccessQueryParams, {
   username,
   audioName,
   audioDuration
@@ -15,7 +15,19 @@ async function createPost(models, {
     audioDuration
   })
   await post.save()
-  return post.toJSON()
+
+  const audioURL = buildPostAudioURL(audioURLPrefix, audioName, temporaryAccessQueryParams)
+
+  return {
+    id: post._id,
+    username: post.username,
+    audioURL,
+    audioDuration: post.audioDuration,
+    likes: post.likes,
+    likesCount: post.likes.length,
+    playsCount: post.playsCount,
+    createdAt: post.createdAt
+  }
 }
 
 async function increasePlayCount(/* models, audioName */) {
@@ -52,8 +64,8 @@ async function getFeedForUser({
       username: post.username,
       audioURL,
       audioDuration: post.audioDuration,
-      likesCount: post.likesCount,
-      dislikesCount: post.dislikesCount,
+      likes: post.likes,
+      likesCount: post.likes.length,
       playsCount: post.playsCount,
       createdAt: post.createdAt
     }

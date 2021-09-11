@@ -6,7 +6,6 @@ const { uploadAudio, buildStorageAudioURL } = require('../services/audio')
 const {
   createPost,
   increasePlayCount,
-  buildPostAudioURL,
   getFeedForUser,
   likePost,
   removePost
@@ -20,9 +19,7 @@ const postPost = ({ env, models }) => async (request, reply) => {
     containerName: env.CONTAINER_NAME
   })
 
-  const audioURL = buildPostAudioURL(env.AUDIO_URL_PREFIX, audioName, temporaryAccessQueryParams)
-
-  const { _id: id, createdAt } = await createPost(models, {
+  const post = await createPost(models, env.AUDIO_URL_PREFIX, temporaryAccessQueryParams, {
     username: 'TO_BE_SET',
     audioName,
     audioDuration
@@ -30,16 +27,7 @@ const postPost = ({ env, models }) => async (request, reply) => {
 
   reply
     .code(200)
-    .send({
-      id,
-      username: 'TO_BE_SET',
-      audioURL,
-      audioDuration,
-      likesCount: 0,
-      dislikesCount: 0,
-      playsCount: 0,
-      createdAt
-    })
+    .send(post)
 }
 
 const getFeed = ({ env, models }) => async (request, reply) => {
@@ -102,10 +90,14 @@ const deletePost = ({ models }) => async (request, reply) => {
     .send()
 }
 
+// TODO: Improve this endpoint to check the database connectivity
+const getHealthCheck = () => () => ({ isHealthy: true })
+
 module.exports = {
   postPost,
   getFeed,
   getPostAudio,
   putPostLike,
-  deletePost
+  deletePost,
+  getHealthCheck
 }
