@@ -50,6 +50,8 @@ test('POST /post should create a new post', async (t) => {
     payload: readStream
   })
 
+  t.is(response.statusCode, 200)
+
   const payload = response.json()
 
   t.deepEqual(Object.keys(payload), [
@@ -71,6 +73,61 @@ test('POST /post should create a new post', async (t) => {
   t.truthy(/^\/post\/audio\/.*.mp3$/.test(audioURL.pathname))
 
   t.like(payload, {
+    username: 'TO_BE_SET',
+    audioDuration: 29.648979591836735,
+    likes: [],
+    likesCount: 0,
+    playsCount: 0
+  })
+})
+
+test('GET /feed should retrieve the latest posts', async (t) => {
+  const { env, models, dbConn } = t.context
+  const logger = mockLogger()
+  const server = setupServer({ env, logger, models, dbConn })
+
+  const pathValidAudioFile = path.join(process.env.PWD, 'test/assets/short-valid-audio.mp3')
+  await access(pathValidAudioFile)
+  const readStream = fs.createReadStream(pathValidAudioFile)
+
+  let response = await server.inject({
+    method: 'POST',
+    url: '/post',
+    headers: {
+      'Content-Type': 'audio/mpeg'
+    },
+    payload: readStream
+  })
+  t.is(response.statusCode, 200)
+
+  response = await server.inject({
+    method: 'GET',
+    url: '/feed'
+  })
+  t.is(response.statusCode, 200)
+
+  const payload = response.json()
+
+  t.truthy(payload.length > 0)
+  t.deepEqual(Object.keys(payload[0]), [
+    'id',
+    'username',
+    'audioURL',
+    'audioDuration',
+    'likes',
+    'likesCount',
+    'playsCount',
+    'createdAt'
+  ])
+
+  t.is(typeof payload[0].id, 'string')
+  t.truthy(DateTime.fromISO(payload[0].createdAt).isValid)
+
+  const audioURL = new URL(payload[0].audioURL)
+  t.is(audioURL.origin, 'http://localhost:9000')
+  t.truthy(/^\/post\/audio\/.*.mp3$/.test(audioURL.pathname))
+
+  t.like(payload[0], {
     username: 'TO_BE_SET',
     audioDuration: 29.648979591836735,
     likes: [],
