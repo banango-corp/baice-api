@@ -1,3 +1,5 @@
+'use strict'
+
 const { URLSearchParams } = require('url')
 
 const { uploadAudio, buildStorageAudioURL } = require('../services/audio')

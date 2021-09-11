@@ -1,3 +1,5 @@
+'use strict'
+
 const VError = require('verror')
 const uuid = require('uuid').v4
 const fileType = require('file-type')

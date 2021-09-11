@@ -28,6 +28,7 @@
     "comma-dangle": [
       "error",
       "never"
-    ]
+    ],
+    "strict": "error"
   }
 }

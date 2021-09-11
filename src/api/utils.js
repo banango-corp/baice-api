@@ -1,3 +1,5 @@
+'use strict'
+
 function streamToBuffer(readableStream) {
   return new Promise((resolve, reject) => {
     const chunks = []

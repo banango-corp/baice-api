@@ -1,3 +1,5 @@
+'use strict'
+
 const {
   buildTemporaryAccessQueryParams
 } = require('./audio')

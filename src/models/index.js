@@ -1,3 +1,5 @@
+'use strict'
+
 const Post = require('./post')
 
 const createModels = (db) => ({
