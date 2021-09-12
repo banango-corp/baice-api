@@ -47,12 +47,7 @@ const uploadAudio = (accountName, accountKey, containerName, BlobServiceClient) 
       }
     })
 
-    const temporaryAccessQueryParams = buildTemporaryAccessQueryParams({
-      audioName,
-      accountName,
-      accountKey,
-      containerName
-    })
+    const temporaryAccessQueryParams = buildTemporaryAccessQueryParams(accountName, accountKey, containerName)(audioName)
 
     return {
       audioName,

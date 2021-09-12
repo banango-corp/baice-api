@@ -150,6 +150,7 @@ test('GET /feed should retrieve the latest posts', async (t) => {
   const audioURL = new URL(payload[0].audioURL)
   t.is(audioURL.origin, 'http://localhost:9000')
   t.truthy(/^\/post\/audio\/.*.mp3$/.test(audioURL.pathname))
+  t.deepEqual([...audioURL.searchParams.keys()], ['sv', 'st', 'se', 'sr', 'sp', 'sig'])
 
   t.like(payload[0], {
     username: 'TO_BE_SET',
