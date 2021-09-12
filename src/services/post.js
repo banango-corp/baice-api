@@ -1,5 +1,7 @@
 'use strict'
 
+const VError = require('verror')
+
 const buildPostAudioURL = (audioURLPrefix, audioName, temporaryAccessQueryParams) => `${audioURLPrefix}/post/audio/${audioName}?${temporaryAccessQueryParams}`
 
 const createPost = (models, audioURLPrefix) => async (temporaryAccessQueryParams, {
@@ -88,7 +90,10 @@ const likePost = (models, dbConn, audioService, audioURLPrefix) => async (userna
 }
 
 const removePost = (models) => async (postId) => {
-  await models.Post.deleteOne({ _id: postId })
+  const result = await models.Post.deleteOne({ _id: postId })
+  if (result.deletedCount === 0) {
+    throw new VError({ name: 'PostNotFound' }, 'Could not find a post with this ID')
+  }
 }
 
 module.exports = (models, dbConn, audioService, audioURLPrefix) => ({
