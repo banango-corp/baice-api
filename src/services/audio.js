@@ -29,21 +29,22 @@ const buildStorageAudioURL = (accountName, accountKey, containerName, BlobServic
 
 const uploadAudio = (accountName, accountKey, containerName, BlobServiceClient) => async (audioBuffer) => {
   try {
-    const { mime: mimeType, ext: fileExtension } = await fileType.fromBuffer(audioBuffer)
-    const { format: { duration: audioDuration } } = await mm.parseBuffer(audioBuffer, { mimeType })
-    if (audioDuration > 30) {
-      throw new VError({ name: 'ExceededMaximumDuration' }, 'Audio buffer exceeded the maximum duration of 30 seconds')
-    }
+    // TODO: Identify the mimeType from the incoming buffer and retrieve the audio duration
+    // const { mime: mimeType, ext: fileExtension } = await fileType.fromBuffer(audioBuffer)
+    // const { format: { duration: audioDuration } } = await mm.parseBuffer(audioBuffer, { mimeType })
+    // if (audioDuration > 30) {
+    //   throw new VError({ name: 'ExceededMaximumDuration' }, 'Audio buffer exceeded the maximum duration of 30 seconds')
+    // }
 
     const sharedKeyCredential = new StorageSharedKeyCredential(accountName, accountKey)
     const blobServiceClient = new BlobServiceClient(blobServiceUrl(accountName), sharedKeyCredential)
     const containerClient = blobServiceClient.getContainerClient(containerName)
-    const audioName = `${uuid()}.${fileExtension}`
+    const audioName = `${uuid()}.mp3` // TODO: Set the file extension using the result from fileType.fromBuffer
     const blockBlobClient = containerClient.getBlockBlobClient(audioName)
 
     await blockBlobClient.upload(audioBuffer, Buffer.byteLength(audioBuffer), {
       blobHTTPHeaders: {
-        blobContentType: mimeType
+        blobContentType: 'audio/mpeg' // TODO: Set the mimeType using the result from fileType.fromBuffer
       }
     })
 
@@ -51,7 +52,7 @@ const uploadAudio = (accountName, accountKey, containerName, BlobServiceClient) 
 
     return {
       audioName,
-      audioDuration,
+      audioDuration: 0, // TODO: Return audio duration
       temporaryAccessQueryParams
     }
   } catch (error) {

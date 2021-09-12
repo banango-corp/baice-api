@@ -93,7 +93,7 @@ test('POST /post should create a new post', async (t) => {
 
   t.like(payload, {
     username: 'TO_BE_SET',
-    audioDuration: 29.648979591836735,
+    audioDuration: 0,
     likes: [],
     likesCount: 0,
     playsCount: 0
@@ -154,7 +154,7 @@ test('GET /feed should retrieve the latest posts', async (t) => {
 
   t.like(payload[0], {
     username: 'TO_BE_SET',
-    audioDuration: 29.648979591836735,
+    audioDuration: 0,
     likes: [],
     likesCount: 0,
     playsCount: 0
