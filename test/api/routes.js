@@ -1,7 +1,8 @@
 'use strict'
 
+require('dotenv').config()
+
 const test = require('ava')
-const db = require('mongoose')
 const { access } = require('fs/promises')
 const fs = require('fs')
 const path = require('path')
@@ -9,17 +10,17 @@ const { DateTime } = require('luxon')
 
 const { setupServer } = require('../../src/api')
 const { parseEnv } = require('../../src/env')
-const { createModels } = require('../../src/models')
 const buildAudioService = require('../../src/services/audio')
 const buildPostService = require('../../src/services/post')
 const { mockLogger } = require('../helpers/mock-logger')
 const { mockBlobServiceClient } = require('../helpers/mock-blob-service-client')
+const { mockModels, mockDBConnection } = require('../helpers/mock-db')
 
 test.before(async (t) => {
   const env = parseEnv(process.env)
 
-  const models = createModels(db)
-  const dbConn = await db.connect(env.MONGODB_CONN_STRING)
+  const models = mockModels()
+  const dbConn = mockDBConnection()
 
   t.context = {
     env,

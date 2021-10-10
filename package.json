@@ -29,6 +29,6 @@
   "scripts": {
     "start": "node src/index.js",
     "start:dev": "nodemon src/index.js",
-    "test": "ava 'test/**/*.js'"
+    "test": "ava -v 'test/**/*.js'"
   }
 }
