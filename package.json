@@ -1,6 +1,6 @@
 {
   "name": "baice-api",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "main": "src/index.js",
   "engines": {
     "node": ">=v14.0.0"

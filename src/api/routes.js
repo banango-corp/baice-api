@@ -2,6 +2,8 @@
 
 const { URLSearchParams } = require('url')
 
+const { version } = require('../../package.json')
+
 const postPost = ({ audioService, postService }) => async (request, reply) => {
   const { audioName, audioDuration, temporaryAccessQueryParams } = await audioService.uploadAudio(request.body)
 
@@ -52,7 +54,7 @@ const deletePost = ({ postService }) => async (request, reply) => {
 }
 
 // TODO: Improve this endpoint to check the database connectivity
-const getHealthCheck = () => () => ({ isHealthy: true })
+const getHealthCheck = () => () => ({ isHealthy: true, version })
 
 module.exports = {
   postPost,

@@ -44,7 +44,7 @@ test('GET /health-check should return an object indicating the API is running an
     url: '/health-check'
   })
 
-  t.deepEqual(response.json(), { isHealthy: true })
+  t.like(response.json(), { isHealthy: true })
 })
 
 test('POST /post should create a new post', async (t) => {
