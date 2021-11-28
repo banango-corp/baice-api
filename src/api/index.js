@@ -30,19 +30,20 @@ function setupServer({ logger, audioService, postService, userService }) {
     return await streamToBuffer(payload)
   })
 
+  const options = { preValidation: authorize(userService, ['USER', 'ADMIN']) }
+
   server.get('/health-check', getHealthCheck())
 
   server.post('/login', postLogin({ userService }))
-  server.post('/logout', { preValidation: authorize(userService, ['USER', 'ADMIN']) }, postLogout({ userService }))
+  server.post('/logout', options, postLogout({ userService }))
 
-  server.get('/users', { preValidation: authorize(userService, ['ADMIN']) }, getUsers({ userService }))
-
-  const options = { preValidation: authorize(userService, ['USER']) }
   server.post('/post', options, postPost({ audioService, postService }))
   server.get('/feed', options, getFeed({ postService }))
   server.get('/post/audio/:audioName', options, getPostAudio({ audioService, postService }))
   server.put('/post/:postId/like', options, putPostLike({ postService }))
   server.delete('/post/:postId', options, deletePost({ postService }))
+
+  server.get('/users', { preValidation: authorize(userService, ['ADMIN']) }, getUsers({ userService }))
 
   return server
 }
