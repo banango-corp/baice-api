@@ -19,6 +19,7 @@ services:
   baice-api-prd:
     build:
       context: .
+      dockerfile: Dockerfile-prd
     command: npm run start
     env_file: .env
     ports:
