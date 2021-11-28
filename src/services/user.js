@@ -3,6 +3,7 @@
 const crypto = require('crypto')
 const bcrypt = require('bcrypt')
 const jose = require('jose')
+const { sanitizeFilter } = require('mongoose')
 
 const secretKey = crypto.createSecretKey(crypto.randomBytes(100))
 
@@ -33,7 +34,7 @@ const listUsers = (models) => async () => {
 }
 
 const login = (models) => async (username, password) => {
-  const found = await models.User.findOne({ username }).exec()
+  const found = await models.User.findOne(sanitizeFilter({ username })).exec()
   if (!found) {
     return { failed: 'Could not find a user matching the provided username' }
   }

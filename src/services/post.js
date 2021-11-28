@@ -1,6 +1,7 @@
 'use strict'
 
 const VError = require('verror')
+const { sanitizeFilter } = require('mongoose')
 
 const buildPostAudioURL = (audioURLPrefix, audioName, temporaryAccessQueryParams) => `${audioURLPrefix}/post/audio/${audioName}?${temporaryAccessQueryParams}`
 
@@ -66,7 +67,7 @@ const likePost = (models, dbConn, audioService, audioURLPrefix) => async (userna
   const dbSession = await dbConn.startSession()
   let post
   await dbSession.withTransaction(async () => {
-    post = await models.Post.findById(postId).exec()
+    post = await models.Post.findById(sanitizeFilter(postId)).exec()
     const index = post.likes.indexOf(username)
     if (index === -1) {
       post.likes.push(username)
@@ -90,7 +91,7 @@ const likePost = (models, dbConn, audioService, audioURLPrefix) => async (userna
 }
 
 const removePost = (models) => async (postId) => {
-  const result = await models.Post.deleteOne({ _id: postId })
+  const result = await models.Post.deleteOne(sanitizeFilter({ _id: postId }))
   if (result.deletedCount === 0) {
     throw new VError({ name: 'PostNotFound' }, 'Could not find a post with this ID')
   }
