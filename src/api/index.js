@@ -7,17 +7,22 @@ const fastifyCors = require('fastify-cors')
 const { createModels } = require('../models')
 const buildAudioService = require('../services/audio')
 const buildPostService = require('../services/post')
+const buildUserService = require('../services/user')
 const {
+  authorize,
+  getHealthCheck,
+  postLogin,
+  postLogout,
   postPost,
   getFeed,
   getPostAudio,
   putPostLike,
   deletePost,
-  getHealthCheck
+  getUsers
 } = require('./routes')
-const { streamToBuffer } = require('./utils')
+const { streamToBuffer, createInitialUsers } = require('./utils')
 
-function setupServer({ logger, audioService, postService }) {
+function setupServer({ logger, audioService, postService, userService }) {
   const server = fastify({ logger })
   server.register(fastifyCors, {})
 
@@ -25,16 +30,19 @@ function setupServer({ logger, audioService, postService }) {
     return await streamToBuffer(payload)
   })
 
-  server.addHook('preHandler', async () => {
-    // TODO: Perform authentication here
-  })
-
   server.get('/health-check', getHealthCheck())
-  server.post('/post', postPost({ audioService, postService }))
-  server.get('/feed', getFeed({ postService }))
-  server.get('/post/audio/:audioName', getPostAudio({ audioService, postService }))
-  server.put('/post/:postId/like', putPostLike({ postService }))
-  server.delete('/post/:postId', deletePost({ postService }))
+
+  server.post('/login', postLogin({ userService }))
+  server.post('/logout', { preValidation: authorize(userService, ['USER', 'ADMIN']) }, postLogout({ userService }))
+
+  server.get('/users', { preValidation: authorize(userService, ['ADMIN']) }, getUsers({ userService }))
+
+  const options = { preValidation: authorize(userService, ['USER']) }
+  server.post('/post', options, postPost({ audioService, postService }))
+  server.get('/feed', options, getFeed({ postService }))
+  server.get('/post/audio/:audioName', options, getPostAudio({ audioService, postService }))
+  server.put('/post/:postId/like', options, putPostLike({ postService }))
+  server.delete('/post/:postId', options, deletePost({ postService }))
 
   return server
 }
@@ -45,8 +53,11 @@ async function start({ env, logger, db }) {
 
   const audioService = buildAudioService(env.ACCOUNT_NAME, env.ACCOUNT_KEY, env.CONTAINER_NAME, BlobServiceClient)
   const postService = buildPostService(models, dbConn, audioService, env.AUDIO_URL_PREFIX)
+  const userService = buildUserService(models)
 
-  const server = setupServer({ logger, audioService, postService })
+  await createInitialUsers(userService)
+
+  const server = setupServer({ logger, audioService, postService, userService })
   await server.listen(env.HTTP_SERVER_PORT, '0.0.0.0')
 
   return server

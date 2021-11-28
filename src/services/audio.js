@@ -2,8 +2,9 @@
 
 const VError = require('verror')
 const uuid = require('uuid').v4
-const fileType = require('file-type')
-const mm = require('music-metadata')
+// TODO: Check the TODO below regarding identification of the mimeType
+// const fileType = require('file-type')
+// const mm = require('music-metadata')
 const { StorageSharedKeyCredential, generateBlobSASQueryParameters, BlobSASPermissions } = require('@azure/storage-blob')
 
 const buildTemporaryAccessQueryParams = (accountName, accountKey, containerName) => (audioName) => {
