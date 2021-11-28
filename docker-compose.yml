@@ -10,20 +10,29 @@ services:
       context: .
     command: npm run start:dev
     env_file: .env
-    volumes: 
+    volumes:
       - .:/usr/app
     ports:
       - 9000:9000
-    depends_on: 
+    depends_on:
+      - mongo
+  baice-api-prd:
+    build:
+      context: .
+    command: npm run start
+    env_file: .env
+    ports:
+      - 9000:9000
+    depends_on:
       - mongo
   test:
     build:
       context: .
     command: npm test
     env_file: .env
-    volumes: 
+    volumes:
       - .:/usr/app
     ports:
       - 9000:9000
-    depends_on: 
+    depends_on:
       - mongo

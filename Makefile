@@ -1,3 +1,6 @@
+api-prd:
+	docker-compose up --force-recreate --no-deps --build baice-api-prd
+
 api:
 	docker-compose up baice-api
 
